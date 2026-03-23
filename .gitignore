@@ -23,3 +23,6 @@ package.json.back
 package.json.onprem
 clean.sh
 .vscode/launch.json
+
+# Yarn Berry cache (Yarn 4.x)
+.yarn/install-state.gz
