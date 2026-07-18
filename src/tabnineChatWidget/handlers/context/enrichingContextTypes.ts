@@ -17,11 +17,27 @@ export type DiagnosticsContext = {
   diagnostics: DiagnosticItem[];
 };
 
-export type EnrichingContextTypes = "Editor" | "Workspace" | "Diagnostics";
+export type RepoDependency = {
+  path: string;
+  code: string;
+  relevance: "direct" | "transitive";
+  pruned: boolean;
+};
+
+export type RepoDependenciesContext = {
+  dependencies: RepoDependency[];
+};
+
+export type EnrichingContextTypes =
+  | "Editor"
+  | "Workspace"
+  | "Diagnostics"
+  | "RepoDependencies";
 
 export type ContextTypeData =
   | ({ type: "Editor" } & EditorContext)
   | ({
       type: "Diagnostics";
     } & DiagnosticsContext)
-  | ({ type: "Workspace" } & WorkspaceContext);
+  | ({ type: "Workspace" } & WorkspaceContext)
+  | ({ type: "RepoDependencies" } & RepoDependenciesContext);

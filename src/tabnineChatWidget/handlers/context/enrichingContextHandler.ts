@@ -7,6 +7,7 @@ import {
 } from "./enrichingContextTypes";
 import getDiagnosticsContext from "./diagnosticsContext";
 import getWorkspaceContext from "./workspaceContext";
+import getRepoDependenciesContext from "./repoDependenciesContext";
 import { rejectOnTimeout } from "../../../utils/utils";
 
 export type EnrichingContextRequestPayload = {
@@ -38,6 +39,8 @@ export async function getEnrichingContext(
               return getDiagnosticsContext(editor);
             case "Workspace":
               return getWorkspaceContext(request.workspaceCommands);
+            case "RepoDependencies":
+              return getRepoDependenciesContext(editor);
             default:
               return undefined;
           }
