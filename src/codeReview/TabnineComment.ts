@@ -11,6 +11,7 @@ import {
 } from "vscode";
 import { fireEvent } from "../binary/requests/requests";
 import * as api from "./api";
+import { formatSuggestionBody } from "./lineAnchoredDiff";
 
 export default class TabnineComment implements Comment {
   suggestion: api.Suggestion;
@@ -26,10 +27,12 @@ export default class TabnineComment implements Comment {
   }
 
   get body(): MarkdownString {
-    return new MarkdownString().appendCodeblock(
+    const { content, language } = formatSuggestionBody(
+      this.oldValue,
       this.suggestion.value,
       this.language
     );
+    return new MarkdownString().appendCodeblock(content, language);
   }
 
   // eslint-disable-next-line class-methods-use-this
