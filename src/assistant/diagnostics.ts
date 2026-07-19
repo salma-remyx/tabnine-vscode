@@ -29,6 +29,7 @@ import {
   initAssistantThreshold,
   getBackgroundThreshold,
 } from "./handleAssistantThreshold";
+import { formatAnchoredChoice } from "./lineAnchoredDiff";
 import { Logger } from "../utils/logger";
 
 const decorationType = vscode.window.createTextEditorDecorationType({
@@ -123,10 +124,16 @@ async function refreshDiagnostics(
       const choices = assistantDiagnostic.completionList.filter(
         (completion) => completion.value !== assistantDiagnostic.reference
       );
-      const choicesString = choices.map(
-        (completion) =>
-          `${completion.message} '${completion.value}'\t${completion.score}%`
-      );
+      const choiceStartLine =
+        document.positionAt(assistantDiagnostic.range.start).line + 1;
+      const choicesString = choices.map((completion) => {
+        const formatted = formatAnchoredChoice(
+          completion,
+          assistantDiagnostic.reference,
+          choiceStartLine
+        );
+        return `${formatted}\t${completion.score}%`;
+      });
       if (choices.length > 0) {
         const prevReferencesLocationsInRange = assistantDiagnostic.references.filter(
           (r) => r.start < assistantDiagnostic.range.start
