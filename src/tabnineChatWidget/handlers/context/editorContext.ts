@@ -1,5 +1,9 @@
 import * as vscode from "vscode";
 import { ContextTypeData, EditorContext } from "./enrichingContextTypes";
+import {
+  isLineAnchoredContextEnabled,
+  toLineAnchoredCode,
+} from "./lineAnchoredCode";
 
 export type SelectedCodeResponsePayload =
   | undefined
@@ -16,7 +20,9 @@ export default async function getEditorContext(
   const currentLine = editor.document.lineAt(editor.selection.active);
 
   const editorContext: EditorContext = {
-    fileCode,
+    fileCode: isLineAnchoredContextEnabled()
+      ? toLineAnchoredCode(fileCode, currentLine.lineNumber)
+      : fileCode,
     currentLineIndex: currentLine.lineNumber,
   };
 
