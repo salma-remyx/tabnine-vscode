@@ -7,6 +7,7 @@ import {
 } from "./enrichingContextTypes";
 import getDiagnosticsContext from "./diagnosticsContext";
 import getWorkspaceContext from "./workspaceContext";
+import getInlineAnnotationsContext from "./inlineAnnotationsContext";
 import { rejectOnTimeout } from "../../../utils/utils";
 
 export type EnrichingContextRequestPayload = {
@@ -21,9 +22,11 @@ export type EnrichingContextResponsePayload = {
 export async function getEnrichingContext(
   request?: EnrichingContextRequestPayload
 ): Promise<EnrichingContextResponsePayload> {
-  const editor = vscode.window.activeTextEditor;
-  if (!editor || !request?.contextTypes || !request.contextTypes.length)
+  if (!request?.contextTypes || !request.contextTypes.length)
     return { enrichingContextData: [] };
+
+  const editor = vscode.window.activeTextEditor;
+  if (!editor) return { enrichingContextData: [] };
 
   const contextTypesSet = [...new Set(request.contextTypes)];
 
@@ -38,6 +41,8 @@ export async function getEnrichingContext(
               return getDiagnosticsContext(editor);
             case "Workspace":
               return getWorkspaceContext(request.workspaceCommands);
+            case "InlineAnnotations":
+              return getInlineAnnotationsContext(editor);
             default:
               return undefined;
           }
