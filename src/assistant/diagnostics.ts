@@ -14,6 +14,11 @@ import setState from "../binary/requests/setState";
 import getValidator, { DocumentValidator } from "./DocumentValidator";
 import getAssistantDiagnostics from "./requests/getAssistantDiagnostics";
 import getCompilerDiagnostics from "./requests/getCompilerDiagnostics";
+import {
+  groundedReorder,
+  DEFAULT_MAX_COMPLETIONS_PER_DIAGNOSTIC,
+  DEFAULT_MAX_INSTRUMENT_CALLS,
+} from "./groundedReorder";
 import AssistantCodeActionProvider from "./AssistantCodeActionProvider";
 import getValidLanguages from "./requests/getValidLanguages";
 import TabNineDiagnostic from "./TabNineDiagnostic";
@@ -118,8 +123,29 @@ async function refreshDiagnostics(
     if (cancellationToken.isCancelled()) {
       return;
     }
+    // Interaction-scaling pass (adapted from arXiv:2607.11598): re-rank each
+    // proposed completion by grounded compiler feedback before surfacing it,
+    // so a fix that actually compiles cleaner ranks above one the model merely
+    // scored highly. Bounded by DEFAULT_MAX_INSTRUMENT_CALLS so the editor
+    // never pays an unbounded cost for this third axis of test-time compute.
+    const groundedDiagnostics =
+      assistantDiagnostics && assistantDiagnostics.length > 0
+        ? await groundedReorder(
+            code,
+            document.fileName,
+            assistantDiagnostics,
+            getCompilerDiagnostics,
+            {
+              maxCompletionsPerDiagnostic: DEFAULT_MAX_COMPLETIONS_PER_DIAGNOSTIC,
+              maxInstrumentCalls: DEFAULT_MAX_INSTRUMENT_CALLS,
+            }
+          )
+        : assistantDiagnostics;
+    if (cancellationToken.isCancelled()) {
+      return;
+    }
     const newDiagnostics: TabNineDiagnostic[] = [];
-    assistantDiagnostics?.forEach((assistantDiagnostic) => {
+    groundedDiagnostics?.forEach((assistantDiagnostic) => {
       const choices = assistantDiagnostic.completionList.filter(
         (completion) => completion.value !== assistantDiagnostic.reference
       );
